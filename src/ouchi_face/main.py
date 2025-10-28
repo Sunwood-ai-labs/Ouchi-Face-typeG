@@ -196,7 +196,7 @@ def api_list_resources(q: str | None = None, resource_type: str | None = None) -
     elif resource_type is not None:
         raise HTTPException(status_code=400, detail="Invalid resource type")
     resources = list_resources(search=q, resource_type=resource_filter)
-    return [ResourceRead.from_model(resource) for resource in resources]
+    return resources
 
 
 @app.get("/api/resources/{resource_id}", response_model=ResourceRead)
