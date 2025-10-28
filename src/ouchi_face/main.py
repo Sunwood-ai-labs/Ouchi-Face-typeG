@@ -204,4 +204,4 @@ def api_get_resource(resource_id: int) -> ResourceRead:
     resource = get_resource(resource_id)
     if resource is None:
         raise HTTPException(status_code=404, detail="Resource not found")
-    return ResourceRead.from_model(resource)
+    return resource
