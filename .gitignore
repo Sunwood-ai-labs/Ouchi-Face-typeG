@@ -19,6 +19,10 @@ discord-issue-bot/data/history.json
 discord-issue-bot/uv.lock
 .env.actions
 uv.lock
+data/
+
+# App assets
+*.db
 
 # Test and coverage artifacts
 .pytest_cache/
