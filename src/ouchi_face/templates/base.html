@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Ouchi Face{% endblock %}</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-bar">
+        <div class="brand-group">
+          <a class="brand" href="/">Ouchi Face</a>
+          <span class="brand-tagline">Your local Spaces homebase</span>
+        </div>
+        <nav class="header-nav" aria-label="主要ナビゲーション">
+          <a class="header-link is-active" href="/">Spaces</a>
+          <span class="header-link">Datasets</span>
+          <span class="header-link">Models</span>
+          <span class="header-link">Docs</span>
+        </nav>
+        <div class="header-actions">
+          <a class="button button--ghost" href="/api/resources" target="_blank" rel="noopener">API</a>
+          <a class="button button--primary" href="/resources/new">＋ 新規登録</a>
+        </div>
+      </div>
+    </header>
+    <main class="container">
+      {% if message %}
+      <div class="flash">{{ message }}</div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="site-footer">
+      <div class="container">
+        <p>おうちリソースをまとめて管理。ローカルAIライフをもっと快適に💫</p>
+      </div>
+    </footer>
+  </body>
+</html>

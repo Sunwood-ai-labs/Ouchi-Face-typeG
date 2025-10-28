@@ -1,218 +1,80 @@
-<div align="center">
+# Ouchi Face
 
-![Image](https://raw.githubusercontent.com/Sunwood-ai-labsII/gemini-actions-lab/refs/heads/main/docs/gemini-actions-labs.png)
+> おうちサーバーで動かす Hugging Face 風ポータル。ローカルのアプリやデータセット、リポジトリを可愛くまとめて即アクセスしよ〜！
 
+## ✨ なにができるの？
 
-# Gemini Actions Lab
+- **リソース登録**: Gradio/Streamlit みたいなデモアプリの URL、NAS 上のデータセット、GitHub/Forgejo リポジトリをメタデータ付きで登録。
+- **カード表示 & キーワード検索**: 登録したリソースをカードで一覧。名前検索＆種別フィルタで迷子知らず。
+- **詳細ビュー**: アプリの起動リンク、ローカルパス、README プレビュー（GitHub/Forgejo なら自動取得）をひと目でチェック。
+- **シンプルな API**: `/api/resources` から JSON で登録状況を取得できるから、他ツールとの連携もイージー。
 
-<a href="./README.md"><img src="https://img.shields.io/badge/English-Readme-blue?style=for-the-badge&logo=github&logoColor=white" alt="English" /></a>
-<a href="./README.ja.md"><img src="https://img.shields.io/badge/日本語-Readme-red?style=for-the-badge&logo=github&logoColor=white" alt="日本語" /></a>
-<img src="https://img.shields.io/badge/GitHub%20Actions-AI-blue?style=for-the-badge&logo=github-actions&logoColor=white" alt="GitHub Actions" />
-<img src="https://img.shields.io/badge/Gemini-AI-4285F4?style=for-the-badge&logo=google-gemini&logoColor=white" alt="Gemini" />
-[![PyPI](https://img.shields.io/pypi/v/gemini-actions-lab-cli?style=for-the-badge)](https://pypi.org/project/gemini-actions-lab-cli/)
+## 🏗️ アーキテクチャ概要
 
-[![💬 Gemini CLI](https://github.com/Sunwood-ai-labsII/gemini-actions-lab/actions/workflows/gemini-cli.yml/badge.svg)](https://github.com/Sunwood-ai-labsII/gemini-actions-lab/actions/workflows/gemini-cli.yml)
+| レイヤー | 使用技術 | 役割 |
+| --- | --- | --- |
+| Web アプリ | FastAPI + Jinja2 | リソース一覧・詳細・登録フォームを提供 |
+| データ永続化 | SQLite (標準 `sqlite3` モジュール) | リソース情報をローカルファイルで保存 |
+| README プレビュー | `requests` + `markdown` | GitHub / Forgejo から README をフェッチして Markdown → HTML 化 |
 
+> 本当は Next.js でキメたいけど、オフライン環境向けに Python スタックで MVP をまとめたよ。将来の React 化も見据えた構成です。
 
-</div>
+## 🚀 クイックスタート
 
----
+1. **依存インストール**
+   ```bash
+   uv sync  # または pip install -e .[test]
+   ```
 
-## 📖 概要
+2. **サーバー起動**
+   ```bash
+   uv run uvicorn ouchi_face.main:app --reload --port 8000
+   ```
+   ブラウザで [http://localhost:8000](http://localhost:8000) を開くとポータルにアクセスできるよ。
 
-このリポジトリは、GoogleのGemini AIをGitHub Actionsと統合するための実験室およびショーケースとして機能します。生成AIの力を利用して、さまざまなリポジトリ管理タスクを自動化する方法を示します。
+3. **データベースの場所**
+   - デフォルト: `data/ouchi_face.db`
+   - 環境変数 `OUCHI_FACE_DB_PATH` をセットすると保存先をカスタム可能。
 
-### 🎯 主な機能
-- **AIによる自動化**: Geminiを活用して、Issueのトリアージ、プルリクエストのレビューなどのタスクを処理します。
-- **CLIライクな対話**: Issueのコメントから直接AIアシスタントと対話します。
-- **拡張可能なワークフロー**: 独自のプロジェクトに合わせてワークフローを簡単に適応およびカスタマイズできます。
-
----
-
-## 🤖 ワークフロー概要
-
-![](https://raw.githubusercontent.com/Sunwood-ai-labsII/gemini-actions-lab/refs/heads/main/docs/gal-architecture.png)
-
-このリポジトリには、以下のGitHub Actionsワークフローが含まれています（詳細は [.github/workflows/architecture.md](.github/workflows/architecture.md) を参照）：
-
-- `gemini-cli.yml`: 英語CLI。Issue/PR/コメント/手動でAIコマンドを実行
-- `gemini-jp-cli.yml`: 日本語CLI。Issue/PR/コメント/手動でAIコマンドを実行
-- `gemini-pr-review.yml`: PRレビュー自動化（MCP GitHubサーバー経由でコメント）
-- `gemini-issue-automated-triage.yml`: 新規/更新Issueの自動トリアージ
-- `gemini-issue-scheduled-triage.yml`: 定期スキャンで未トリアージIssueを一括処理
-- `imagen4-issue-trigger-and-commit.yml`: イシュー由来の画像生成→コミット
-- `imagen4-generate-and-commit.yml`: 手動/ディスパッチで画像生成→コミット
-- `gemini-release-notes.yml`: リリース画像生成とリリースノートの自動作成
-- `static-site.yml`: リポジトリ内容をGitHub Pagesに公開
-- `sync-to-report-gh.yml`: 旧テンプレ（現状は参考用）
-
-ワークフローの構成・相互関係・実装詳細は、[.github/workflows/architecture.md](.github/workflows/architecture.md) に集約しています。
-
----
-
-## 🏗️ アーキテクチャ
-アーキテクチャ図やワークフローの詳細な説明は、[.github/workflows/architecture.md](.github/workflows/architecture.md) を参照してください。
-
-### 💬 Discord Issue Bot（任意）
-- Discord から GitHub Issue を作成する最小ボット
-- `discord-issue-bot/.env` にローカルでトークン設定（リポジトリには含めない）
-- 起動例: `docker compose -f docker-compose.yaml up -d --build`
-
-## 📸 スクリーンショットと例
-
-### 🤖 CLIの対話例
-Issueを作成し、`@gemini-cli-jp /help`とコメントして、利用可能なコマンドを確認します:
-
-```
-@gemini-cli-jp /help
-```
-
-AIアシスタントが利用可能なコマンドと使用例を返信します。
-
- 
-
-### 💬 対話の例
-
-**コードレビューのリクエスト:**
-```
-@gemini-cli-jp /review-pr
-このプルリクエストをレビューし、改善点を提案してください
-```
-
-**Issueのトリアージ:**
-```
-@gemini-cli-jp /triage
-このIssueを分析し、適切なラベルと担当者を提案してください
-```
-
----
-
-## 🚀 インストールとセットアップ
-
-### 前提条件
-- リポジトリ作成権限のあるGitHubアカウント
-- Google AI StudioのGemini APIキー
-- GitHub Actionsの基本的な理解
-
-### クイックスタート
-1. **このリポジトリをフォーク**して、自分のGitHubアカウントにコピーします
-2. リポジトリの設定で**GitHubシークレットを設定**します:
-   - `GEMINI_API_KEY`: あなたのGemini APIキー
-   - `GITHUB_TOKEN`: (自動的に提供されます)
-3. `.github/workflows/`からあなたのリポジトリに**ワークフローファイルをコピー**します
-4. あなたのニーズに合わせて**ワークフローをカスタマイズ**します
-5. Issueを作成し、`@gemini-cli-jp /help`とコメントして**セットアップをテスト**します
-
----
-
-## 🛠️ gemini-actions-lab CLI
-
-リポジトリに付属する `gemini-actions-lab-cli`（エイリアス: `gal`）を使うと、シークレット同期やテンプレートワークフローの取得をコマンド一発で実行できます。
-
-### インストール
-
-PyPI から直接インストールできます。
+## 🧪 テスト
 
 ```bash
-pip install gemini-actions-lab-cli
+uv run pytest
 ```
 
-ローカル開発でソースを同期したい場合は `uv` によるセットアップもサポートしています。
+## 📡 API スニペット
 
-```bash
-uv sync
-```
+- 一覧取得: `GET /api/resources`
+- 詳細取得: `GET /api/resources/{id}`
 
-### シークレットの同期
+どちらもクエリパラメータ `q`, `resource_type` をサポート。`resource_type` は `app` / `dataset` / `repository` のいずれかだよ。
 
-`.secrets.env`（任意のファイルを `--env-file` で指定可能）に定義した値を、リポジトリシークレットへ一括で作成・更新します。
+## 🗂️ テーブルスキーマ
 
-```bash
-gal sync-secrets --repo <owner>/<repo> --env-file path/to/.secrets.env
-```
+| カラム | 型 | 説明 |
+| --- | --- | --- |
+| `id` | INTEGER | 主キー |
+| `name` | TEXT | リソース名 |
+| `resource_type` | TEXT | `app` / `dataset` / `repository` |
+| `description` | TEXT | 説明文 |
+| `link_url` | TEXT | 起動 URL や主要リンク |
+| `location` | TEXT | NAS パスなど参考パス |
+| `icon_url` | TEXT | サムネイル用 URL |
+| `repo_url` | TEXT | GitHub / Forgejo リポジトリ |
+| `created_at` | TEXT | ISO8601 形式の作成日時 |
+| `updated_at` | TEXT | ISO8601 形式の更新日時 |
 
-- コマンド実行ディレクトリの `.env` ファイルは自動的に読み込まれ、`GITHUB_TOKEN` など CLI 実行に必要な環境変数を設定できます。
-- リポジトリへ同期したい secrets は `.secrets.env` に分離してください（任意のファイルを `--env-file` で指定可）。
-- `GITHUB_TOKEN` 環境変数、または `--token` オプションで GitHub の個人アクセストークンを指定してください。
+## 💡 運用 Tips
 
-### AIエージェントガイドラインの同期
+- README プレビューは外部ネットワークに接続できるときのみ取得。失敗しても画面でやさしくお知らせするよ。
+- SQLite ファイルは `data/` 以下に保存されるから、バックアップはこのディレクトリごとコピーすれば OK。
+- テスト実行時は一時 DB を使うようにしてるから、本番データが汚れる心配なし。
 
-`.github/ai-guidelines` ディレクトリに格納されているAIエージェントガイドラインをリポジトリに同期できます。
+## 🛣️ 次の伸びしろ（ロードマップ）
 
-```bash
-# デフォルトブランチに同期
-uv run gal sync-agent --repo Sunwood-ai-labs/my-repo
+- タグ＆カテゴリ機能
+- 簡単ログイン（LAN 内パスコード）
+- Docker Compose テンプレでの配布
+- ローカルサービス自動ディスカバリ（mDNS / Docker ソケット連携）
 
-# 特定のブランチに同期
-uv run gal sync-agent --repo Sunwood-ai-labs/my-repo --branch develop
-
-# カスタムメッセージで同期
-uv run gal sync-agent --repo Sunwood-ai-labs/my-repo --message "docs: update AI agent guidelines"
-```
-
-### 🚀 クイックスタート
-
-よく使う同期コマンドは下記のとおりです（Pages 連携とトップページのコピー込み）。
-
-```bash
-gal sync-workflows \
-  --repo Sunwood-ai-labs/demo-001 \
-  --destination . \
-  --clean \
-  --enable-pages-actions \
-  --include-index
-```
-
-> `uv run` を利用して開発用に実行する場合は、`uv run gal ...` と置き換えてください。
-
-オプションの詳細やその他のユースケースは `src/README.md` を参照してください。
-
----
-
-## 📁 ディレクトリ構造
-
-```
-.
-├── .github/
-│   └── workflows/
-│       ├── architecture.md
-│       ├── gemini-cli.yml
-│       ├── gemini-jp-cli.yml
-│       ├── gemini-pr-review.yml
-│       ├── gemini-issue-automated-triage.yml
-│       ├── gemini-issue-scheduled-triage.yml
-│       ├── imagen4-issue-trigger-and-commit.yml
-│       ├── imagen4-generate-and-commit.yml
-│       ├── gemini-release-notes.yml
-│       ├── static-site.yml
-│       └── sync-to-report-gh.yml
-├── discord-issue-bot/
-│   ├── Dockerfile
-│   ├── pyproject.toml
-│   ├── docker-compose.yaml
-│   └── bot.py
-├── .gitignore
-├── LICENSE
-└── README.md
-```
-
----
-
-
-
-## 🤖 Discord Issue Bot
-
-Discord から直接 GitHub Issue を作成する最小ボットの詳細なドキュメントは、以下を参照してください。
-
-- ドキュメント: [discord-issue-bot/README.md](discord-issue-bot/README.md)
-
-## 📝 ライセンス
-
-このプロジェクトは、[LICENSE](LICENSE)ファイルの条件に基づいてライセンスされています。
-
----
-
-© 2025 Sunwood-ai-labsII
-
-
----
+おうち開発ライフ、もっとカラフルにしてこ〜ね！✨

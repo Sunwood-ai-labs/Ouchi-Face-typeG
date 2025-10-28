@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Ouchi Face{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+<form class="resource-form" method="post" action="{{ action }}">
+  <label>
+    名前
+    <input type="text" name="name" required value="{{ resource.name if resource else '' }}" />
+  </label>
+  <label>
+    種別
+    <select name="resource_type" required>
+      {% for value, label in type_choices %}
+      <option value="{{ value }}" {% if resource and resource.resource_type.value == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>
+    説明
+    <textarea name="description" rows="4" required>{{ resource.description if resource else '' }}</textarea>
+  </label>
+  <label>
+    起動URL / データ配置パス
+    <input type="text" name="link_url" value="{{ resource.link_url if resource else '' }}" />
+  </label>
+  <label>
+    参考パス（NASや備考など）
+    <input type="text" name="location" value="{{ resource.location if resource else '' }}" />
+  </label>
+  <label>
+    アイコンURL
+    <input type="text" name="icon_url" value="{{ resource.icon_url if resource else '' }}" />
+  </label>
+  <label>
+    リポジトリURL（GitHub/Forgejoなど）
+    <input type="text" name="repo_url" value="{{ resource.repo_url if resource else '' }}" />
+  </label>
+  <div class="form-actions">
+    <button class="button button--primary" type="submit">{{ submit_label }}</button>
+    <a class="button button--ghost" href="{% if resource %}/resources/{{ resource.id }}{% else %}/{% endif %}">キャンセル</a>
+  </div>
+</form>
+{% if resource %}
+<form method="post" action="/resources/{{ resource.id }}/delete" class="danger-zone">
+  <button class="button button--danger" type="submit">リソースを削除</button>
+</form>
+{% endif %}
+{% endblock %}

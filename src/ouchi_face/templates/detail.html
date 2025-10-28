@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}{{ resource.name }} | Ouchi Face{% endblock %}
+
+{% block content %}
+<article class="resource-detail">
+  <header class="detail-header">
+    <div>
+      <span class="badge">{{ resource.resource_type.value|title }}</span>
+      <h1>{{ resource.name }}</h1>
+    </div>
+    <div class="detail-actions">
+      {% if resource.link_url %}
+      <a class="button button--primary" href="{{ resource.link_url }}" target="_blank" rel="noopener">アプリを開く</a>
+      {% endif %}
+      <a class="button button--outline" href="/resources/{{ resource.id }}/edit">編集</a>
+    </div>
+  </header>
+
+  {% if resource.icon_url %}
+  <img src="{{ resource.icon_url }}" alt="{{ resource.name }}" class="detail-icon" />
+  {% endif %}
+
+  <section class="detail-section">
+    <h2>概要</h2>
+    <p>{{ resource.description }}</p>
+  </section>
+
+  <section class="detail-section">
+    <h2>リンク</h2>
+    <ul class="detail-links">
+      {% if resource.link_url %}
+      <li><strong>主要URL:</strong> <a href="{{ resource.link_url }}" target="_blank" rel="noopener">{{ resource.link_url }}</a></li>
+      {% endif %}
+      {% if resource.location %}
+      <li><strong>ローカルパス:</strong> {{ resource.location }}</li>
+      {% endif %}
+      {% if resource.repo_url %}
+      <li><strong>リポジトリ:</strong> <a href="{{ resource.repo_url }}" target="_blank" rel="noopener">{{ resource.repo_url }}</a></li>
+      {% endif %}
+    </ul>
+  </section>
+
+  <section class="detail-section meta">
+    <h2>メタデータ</h2>
+    <dl>
+      <div>
+        <dt>登録日</dt>
+        <dd>{{ resource.created_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+      </div>
+      <div>
+        <dt>最終更新</dt>
+        <dd>{{ resource.updated_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  {% if readme %}
+  <section class="detail-section">
+    <h2>リポジトリREADME</h2>
+    <div class="readme" aria-live="polite">{{ readme.html | safe }}</div>
+  </section>
+  {% elif resource.repo_url %}
+  <section class="detail-section">
+    <h2>リポジトリREADME</h2>
+    <p>READMEの取得に失敗しちゃった…💦 ネットワークやアクセス権を確認してみてね。</p>
+  </section>
+  {% endif %}
+</article>
+{% endblock %}

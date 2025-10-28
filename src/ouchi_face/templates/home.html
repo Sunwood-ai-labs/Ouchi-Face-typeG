@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Ouchi Face | ホームラボスペース{% endblock %}
+
+{% block content %}
+<section class="hero hero--spaces">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <p class="eyebrow">SPACES DIRECTORY</p>
+      <h1>おうちスペースを一望✨ 推しAIをすぐに起動しよ！</h1>
+      <p class="hero-subtitle">
+        GradioやStreamlit、社内データセットまで、ローカルで動くAIスペースをまとめて管理。
+        ハブからすぐアクセスして、今日の実験をブーストしよ〜！
+      </p>
+    </div>
+    <form class="search search--hero" method="get" action="/">
+      <div class="search-input">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input
+          type="text"
+          name="q"
+          placeholder="Ask anything you want to do with AI!"
+          value="{{ query }}"
+        />
+      </div>
+      <div class="search-controls">
+        <label class="select-label">
+          <span>タイプ</span>
+          <select name="resource_type">
+            <option value="all" {% if active_type == 'all' %}selected{% endif %}>All resources</option>
+            {% for value, label in type_choices %}
+            <option value="{{ value }}" {% if active_type == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <button class="button button--primary" type="submit">Search</button>
+      </div>
+    </form>
+    <div class="filter-chips" role="group" aria-label="リソース種別ショートカット">
+      <a
+        class="chip {% if active_type == 'all' %}chip--active{% endif %}"
+        href="{% if query %}/?q={{ query | urlencode }}{% else %}/{% endif %}"
+      >All</a>
+      {% for value, label in type_choices %}
+      <a
+        class="chip {% if active_type == value %}chip--active{% endif %}"
+        href="/?resource_type={{ value }}{% if query %}&q={{ query | urlencode }}{% endif %}"
+      >{{ label }}</a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% if resources %}
+  {% if is_filtered %}
+  <section class="spaces-section">
+    <div class="section-header">
+      <h2>検索結果</h2>
+      <p class="section-subtitle">
+        {% if query %}「{{ query }}」{% endif %}
+        {% if active_type != 'all' %}{{ type_labels[active_type] }}{% else %}すべて{% endif %}のスペースが {{ resources | length }} 件ヒット！
+      </p>
+    </div>
+    <div class="card-grid">
+      {% for resource in featured_resources %}
+      <article class="resource-card" data-type="{{ resource.resource_type.value }}">
+        <div class="card-header">
+          {% if resource.icon_url %}
+          <img src="{{ resource.icon_url }}" alt="{{ resource.name }}" class="card-avatar" />
+          {% else %}
+          <div class="card-avatar card-avatar--fallback">{{ resource.name[:1] if resource.name else '?' }}</div>
+          {% endif %}
+          <div>
+            <span class="badge">{{ type_labels[resource.resource_type.value] }}</span>
+            <h3><a href="/resources/{{ resource.id }}">{{ resource.name }}</a></h3>
+          </div>
+        </div>
+        <p class="resource-description">{{ resource.description }}</p>
+        <div class="card-meta">
+          {% if resource.location %}
+          <span class="meta-item" title="ローカルパス">📁 {{ resource.location }}</span>
+          {% endif %}
+          {% if resource.repo_url %}
+          <span class="meta-item">
+            💾 <a href="{{ resource.repo_url }}" target="_blank" rel="noopener">Repo</a>
+          </span>
+          {% endif %}
+        </div>
+        <div class="resource-footer">
+          {% if resource.link_url %}
+          <a class="button button--ghost" href="{{ resource.link_url }}" target="_blank" rel="noopener">Launch</a>
+          {% endif %}
+          <a class="button button--outline" href="/resources/{{ resource.id }}">詳細を見る</a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% else %}
+    {% if featured_resources %}
+    <section class="spaces-section">
+      <div class="section-header">
+        <h2>Spaces of the week</h2>
+        <p class="section-subtitle">今週みんなが触りたい、おうちAIの注目スペース</p>
+      </div>
+      <div class="card-rail">
+        {% for resource in featured_resources %}
+        <article class="resource-card" data-type="{{ resource.resource_type.value }}">
+          <div class="card-header">
+            {% if resource.icon_url %}
+            <img src="{{ resource.icon_url }}" alt="{{ resource.name }}" class="card-avatar" />
+            {% else %}
+            <div class="card-avatar card-avatar--fallback">{{ resource.name[:1] if resource.name else '?' }}</div>
+            {% endif %}
+            <div>
+              <span class="badge">{{ type_labels[resource.resource_type.value] }}</span>
+              <h3><a href="/resources/{{ resource.id }}">{{ resource.name }}</a></h3>
+            </div>
+          </div>
+          <p class="resource-description">{{ resource.description }}</p>
+          <div class="card-meta">
+            {% if resource.location %}
+            <span class="meta-item" title="ローカルパス">📁 {{ resource.location }}</span>
+            {% endif %}
+            {% if resource.repo_url %}
+            <span class="meta-item">
+              💾 <a href="{{ resource.repo_url }}" target="_blank" rel="noopener">Repo</a>
+            </span>
+            {% endif %}
+          </div>
+          <div class="resource-footer">
+            {% if resource.link_url %}
+            <a class="button button--ghost" href="{{ resource.link_url }}" target="_blank" rel="noopener">Launch</a>
+            {% endif %}
+            <a class="button button--outline" href="/resources/{{ resource.id }}">詳細を見る</a>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+    {% for type_value, items in grouped_resources.items() %}
+    <section class="spaces-section">
+      <div class="section-header">
+        <h2>{{ type_labels[type_value] }}スペース</h2>
+        <p class="section-subtitle">ローカル{{ type_labels[type_value] }}の常設カタログ</p>
+      </div>
+      <div class="card-grid card-grid--loose">
+        {% for resource in items %}
+        <article class="resource-card" data-type="{{ resource.resource_type.value }}">
+          <div class="card-header">
+            {% if resource.icon_url %}
+            <img src="{{ resource.icon_url }}" alt="{{ resource.name }}" class="card-avatar" />
+            {% else %}
+            <div class="card-avatar card-avatar--fallback">{{ resource.name[:1] if resource.name else '?' }}</div>
+            {% endif %}
+            <div>
+              <span class="badge">{{ type_labels[resource.resource_type.value] }}</span>
+              <h3><a href="/resources/{{ resource.id }}">{{ resource.name }}</a></h3>
+            </div>
+          </div>
+          <p class="resource-description">{{ resource.description }}</p>
+          <div class="card-meta">
+            {% if resource.location %}
+            <span class="meta-item" title="ローカルパス">📁 {{ resource.location }}</span>
+            {% endif %}
+            {% if resource.repo_url %}
+            <span class="meta-item">
+              💾 <a href="{{ resource.repo_url }}" target="_blank" rel="noopener">Repo</a>
+            </span>
+            {% endif %}
+          </div>
+          <div class="resource-footer">
+            {% if resource.link_url %}
+            <a class="button button--ghost" href="{{ resource.link_url }}" target="_blank" rel="noopener">Launch</a>
+            {% endif %}
+            <a class="button button--outline" href="/resources/{{ resource.id }}">詳細を見る</a>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+  {% endif %}
+{% else %}
+<p class="empty">まだスペースが登録されてないみたい。まずは右上の「新規登録」で推しAIをエントリーしよっ！</p>
+{% endif %}
+{% endblock %}
