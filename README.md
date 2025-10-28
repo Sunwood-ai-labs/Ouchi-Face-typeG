@@ -21,6 +21,8 @@
 
 ## 🚀 クイックスタート
 
+### ローカル実行
+
 1. **依存インストール**
    ```bash
    uv sync  # または pip install -e .[test]
@@ -35,6 +37,22 @@
 3. **データベースの場所**
    - デフォルト: `data/ouchi_face.db`
    - 環境変数 `OUCHI_FACE_DB_PATH` をセットすると保存先をカスタム可能。
+
+### Docker Compose でまとめて起動
+
+1. イメージをビルドして起動
+   ```bash
+   docker compose up --build
+   ```
+   初回起動時に `data/` ボリュームへ SQLite ファイルを自動生成するよ。
+
+2. 背景で回しっぱなしにする場合は `-d` オプションを追加してね。
+
+3. 片付けるときは
+   ```bash
+   docker compose down
+   ```
+   永続ボリュームを消したいときは `docker compose down --volumes` を使ってね。
 
 ## 🧪 テスト
 
