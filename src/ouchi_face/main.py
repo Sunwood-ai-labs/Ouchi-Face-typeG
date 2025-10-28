@@ -115,13 +115,13 @@ def create_resource_action(
 
 
 @app.get("/resources/{resource_id}", response_class=HTMLResponse)
-def resource_detail(resource_id: int, request: Request) -> HTMLResponse:
+async def resource_detail(resource_id: int, request: Request) -> HTMLResponse:
     resource = get_resource(resource_id)
     if resource is None:
         raise HTTPException(status_code=404, detail="Resource not found")
     readme = None
     if resource.repo_url:
-        readme = ReadmeFetcher.fetch(resource.repo_url)
+        readme = await ReadmeFetcher.fetch(resource.repo_url)
     return templates.TemplateResponse(
         request,
         "detail.html",
